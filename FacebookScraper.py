@@ -157,7 +157,10 @@ class FacebookScraper:
                 elif len(date_text_split) > 3:
                     post.date_posted = datetime.strptime(" ".join(date_text_split[:2]) + " " + str(datetime.now().year), "%B %d %Y")
                 elif len(date_text_split) == 3:
-                    post.date_posted = datetime.strptime(date_text, "%d %B %Y")
+                    try:
+                        post.date_posted = datetime.strptime(date_text, "%d %B %Y")
+                    except:
+                        post.date_posted = datetime.strptime(date_text, "%B %d %Y")
                 elif len(date_text_split) == 2:
                     if date_text.lower() == "just now":
                         post.date_posted = datetime.now()
@@ -291,7 +294,10 @@ class FacebookScraper:
                 elif len(date_text_split) > 3:
                     post.date_posted = datetime.strptime(" ".join(date_text_split[:2]) + " " + str(datetime.now().year), "%B %d %Y")
                 elif len(date_text_split) == 3:
-                    post.date_posted = datetime.strptime(date_text, "%d %B %Y")
+                    try:
+                        post.date_posted = datetime.strptime(date_text, "%d %B %Y")
+                    except:
+                        post.date_posted = datetime.strptime(date_text, "%B %d %Y")
                 elif len(date_text_split) == 2:
                     if date_text.lower() == "just now":
                         post.date_posted = datetime.now()
