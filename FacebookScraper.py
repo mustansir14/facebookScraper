@@ -14,18 +14,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import requests
 import urllib.request
-import os, logging
+import os, logging, sys, argparse
+from sys import platform
+from multiprocessing import Process, Queue
 from config import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, FILES_DIR
 from includes.DB import DB
 from includes.models import *
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 
 class FacebookScraper:
 
     def __init__(self, use_db=True) -> None:
         
         options = Options()
-        # options.headless = True
+        options.headless = True
         options.add_argument("window-size=1920,1080")
         options.add_argument("--log-level=3")
         options.add_argument("--no-sandbox")
@@ -77,7 +78,7 @@ class FacebookScraper:
                 profile.no_of_likes = int(line_text.rstrip("people like this").strip().replace(",", ""))
             elif "people follow this" in line_text:
                 profile.no_of_followers = int(line_text.rstrip("people follow this").strip().replace(",", ""))
-            elif "@" in line_text and "." in line_text:
+            elif "@" in line_text and "." in line_text and "\n" not in line_text and len(line_text) < 50:
                 profile.email = line_text
             elif line_text and line_text[0] == "+" and line_text[1:].replace(" ", "").replace("-", "").isnumeric():
                 profile.phone = line_text.replace(" ", "").replace("-", "")
@@ -213,7 +214,11 @@ class FacebookScraper:
             try:
                 logging.info("Scraping Video %s for %s" % (post.id, username))
                 post.is_video=True
-                video_source = self.driver.find_element_by_xpath('//meta[@property="og:video:url"]').get_attribute("content")
+                try:
+                    video_source = self.driver.find_element_by_xpath('//meta[@property="og:video:url"]').get_attribute("content")
+                except:
+                    logging.info("Video not available. Skipping...")
+                    continue
                 post.media_path = FILES_DIR.rstrip("/") + "/post/video/" + str(post.id) + ".mp4"
                 if not os.path.isfile(post.media_path):
                     urllib.request.urlretrieve(video_source, post.media_path)
@@ -346,6 +351,40 @@ class FacebookScraper:
             products.append(product)
         return products
 
+    def bulk_scrape(self, urls, num_threads):
+
+        if platform == "linux" or platform == "linux2":
+            urls_to_scrape = Queue()
+            for url in urls:
+                urls_to_scrape.put(url)
+            processes = []
+            for i in range(num_threads):
+                processes.append(Process(target=self.scrape_urls_from_queue, args=(urls_to_scrape, )))
+                processes[i].start()
+
+            for i in range(num_threads):
+                processes[i].join()
+        else:
+            for url in urls:
+                self.scrape_profile(url)
+    
+    
+    def scrape_urls_from_queue(self, q):
+
+        try:
+            scraper = FacebookScraper()
+            
+            while q.qsize():
+                company_url = q.get()
+                scraper.scrape_profile(company_url)   
+        except:
+            pass
+
+        try:
+            scraper.kill_chrome()
+        except:
+            pass
+
 
     def kill_chrome(self):
         try:
@@ -355,16 +394,55 @@ class FacebookScraper:
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description="FacebookScraper CLI to grab company profiles, posts and products from URL")
+    parser.add_argument("--bulk_scrape_urls_file", nargs='?', type=str, default=False, help="File to read urls for bulk scrape, one url per line.")
+    parser.add_argument("--urls", nargs='*', help="url(s) for scraping. Separate by spaces")
+    parser.add_argument("--no_of_threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
+    parser.add_argument("--log_file", nargs='?', type=str, default=None, help="Path for log file. If not given, output will be printed on stdout.")
+    parser.add_argument("--grabber-facebook-mustansir", nargs='?', type=bool, default=False, help="Only mark to kill all")
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+    args = parser.parse_args()
+    # setup logging based on arguments
+    if args.log_file and platform == "linux" or platform == "linux2":
+        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    elif platform == "linux" or platform == "linux2":
+        logging.basicConfig(format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    elif args.log_file:
+        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    else:
+        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+
     scraper = FacebookScraper()
-    with open("urls.txt", "r") as f:
-        urls = [x.strip() for x in f.read().split("\n") if x.strip()]
-    for url in urls:
-        profile = scraper.scrape_profile(url)
-        print(profile)
-        for post in profile.posts:
-            print(post)
-        for product in profile.products:
-            print(product)
+    if args.bulk_scrape_urls_file:
+        with open(args.bulk_scrape_urls_file, "r") as f:
+            urls = f.read()
+            urls = [x.strip() for x in urls.split("\n") if x.strip()]
+        scraper.bulk_scrape(urls, num_threads=args.no_of_threads)
+    else:
+        for url in args.urls:
+            profile = scraper.scrape_profile(url)
+            logging.info("Profile for %s scraped successfully.\n" % profile.username)
+            try:
+                print(profile)
+            except Exception as e:
+                print(e)
+            print("\n")
+            for i, post in enumerate(profile.posts, start=1):
+                print("Post# " + str(i))
+                try:
+                    print(post)
+                except Exception as e:
+                    print(e)
+                print("\n")
+            for i, product in enumerate(profile.products, start=1):
+                print("Product# " + str(i))
+                try:
+                    print(product)
+                except Exception as e:
+                    print(e)
+                print("\n")
    
     scraper.kill_chrome()
 
