@@ -69,6 +69,13 @@ class FacebookScraper:
                 see_more_button.click()
         except:
             pass
+        try:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "rq0escxv.l9j0dhe7.du4w35lb.j83agx80.cbu4d94t.d2edcug0.hpfvmrgz.rj1gh0hx.buofh1pr.g5gj957u.o8rfisnq.p8fzw8mz.pcp91wgn.iuny7tx3.ipjc6fyt")))
+        except Exception as e:
+            profile.status = "error"
+            profile.log = "Error for " + url + ": Error loading about block"
+            logging.error(profile.log)
+            self.reporter.error(profile.log)
         lines = self.driver.find_elements_by_class_name("rq0escxv.l9j0dhe7.du4w35lb.j83agx80.cbu4d94t.d2edcug0.hpfvmrgz.rj1gh0hx.buofh1pr.g5gj957u.o8rfisnq.p8fzw8mz.pcp91wgn.iuny7tx3.ipjc6fyt")
         for line in lines:
             line_text = line.text.strip()
