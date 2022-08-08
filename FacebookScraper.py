@@ -99,17 +99,19 @@ class FacebookScraper:
         return profile
 
     
-    def scrape_photos(self, url, username=None):
+    def scrape_photos(self, url, username=None, scrape_specific_photo=None):
 
         photos_url = url.rstrip("/") + "/photos/?ref=page_internal"
         self.driver.get(photos_url)
-        images = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "aodizinl.hv4rvrfc.ihqw7lf3.dati1w0a"))).find_elements_by_tag_name("img")
+        images = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "aodizinl.hv4rvrfc.ihqw7lf3.dati1w0a"))).find_elements_by_tag_name("a")
         image_posts = []
         for image in images:
+            post = Post()
+            post.id = image.get_attribute("href").rstrip("/").split("/")[-1]
+            if scrape_specific_photo and post.id != scrape_specific_photo:
+                continue
             self.driver.execute_script("arguments[0].click();", image)
             img = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "ji94ytn4.d2edcug0.r9f5tntg.r0294ipz")))
-            post = Post()
-            post.id = self.driver.current_url.rstrip("/").split("/")[-1]
             if not username:
                 post.username = self.driver.current_url.split("/photos")[0].split("/")[-1]
             else:
@@ -180,10 +182,12 @@ class FacebookScraper:
                 self.db.insert_or_update_post(post)
             if self.driver.current_url != photos_url:
                 self.driver.back()
+            if scrape_specific_photo:
+                return post
         return image_posts
 
     
-    def scrape_videos(self, url, username=None):
+    def scrape_videos(self, url, username=None, scrape_specific_video=None):
 
         videos_url = url.rstrip("/") + "/videos/?ref=page_internal"
         self.driver.get(videos_url)
@@ -195,6 +199,10 @@ class FacebookScraper:
                 video_urls.append(url)
         video_posts = []
         for video_url in video_urls:
+            post = Post()
+            post.id = video_url.rstrip("/").split("/")[-1]
+            if scrape_specific_video and post.id != scrape_specific_video:
+                continue
             self.driver.get(video_url)
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "hv4rvrfc.dati1w0a.discj3wi")))
             try:
@@ -205,8 +213,6 @@ class FacebookScraper:
                         break
             except:
                 pass
-            post = Post()
-            post.id = self.driver.current_url.rstrip("/").split("/")[-1]
             if not username:
                 post.username = self.driver.current_url.split("/videos")[0].split("/")[-1]
             else:
@@ -307,10 +313,12 @@ class FacebookScraper:
             video_posts.append(post)
             if self.use_db:
                 self.db.insert_or_update_post(post)
+            if scrape_specific_video:
+                return post
         return video_posts
 
     
-    def scrape_products(self, url, username=None):
+    def scrape_products(self, url, username=None, scrape_specific_product=None):
         self.driver.get(url.rstrip("/") + "/shop")
         if not username:
             username = url.rstrip("/").split("/")[-1]
@@ -326,6 +334,8 @@ class FacebookScraper:
                 product.id = product_tag.get_attribute("href").split("?")[0].strip("/").split("/")[-1]
             except Exception as e:
                 logging.error("Error locating ID: " + str(e))
+                continue
+            if scrape_specific_product and product.id != scrape_specific_product:
                 continue
             logging.info("Scraping Product %s for %s" % (product.id, username))
             product.username = username
@@ -349,6 +359,8 @@ class FacebookScraper:
             if self.use_db:
                 self.db.insert_or_update_product(product)
             products.append(product)
+            if scrape_specific_product:
+                return product
         return products
 
     def bulk_scrape(self, urls, num_threads):
