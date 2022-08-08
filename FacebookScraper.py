@@ -17,9 +17,10 @@ import urllib.request
 import os, logging, sys, argparse
 from sys import platform
 from multiprocessing import Process, Queue
-from config import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, FILES_DIR
+from config import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, FILES_DIR, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_IDS
 from includes.DB import DB
 from includes.models import *
+from includes.Reporter import Reporter
 
 class FacebookScraper:
 
@@ -44,6 +45,7 @@ class FacebookScraper:
         self.use_db = use_db
         if use_db:
             self.db = DB(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
+        self.reporter = Reporter(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_IDS)
 
     def scrape_profile(self, url, photos=True, videos=True, products=True) -> Profile:
 
@@ -56,6 +58,7 @@ class FacebookScraper:
             profile.status = "error"
             profile.log = "Error for " + url + ": " + str(e)
             logging.error(profile.log)
+            self.reporter.error(profile.log)
             return profile
         profile.username = subline[0].strip().lstrip("@")
         if len(subline) > 1:
@@ -177,6 +180,7 @@ class FacebookScraper:
                 post.status = "error"
                 post.log = str(e)
                 logging.error(str(e))
+                self.reporter.error(f"Error scraping photo {post.id} for {username}: {str(e)}")
             image_posts.append(post)
             if self.use_db:
                 self.db.insert_or_update_post(post)
@@ -310,6 +314,7 @@ class FacebookScraper:
                 post.status = "error"
                 post.log = str(e)
                 logging.error(str(e))
+                self.reporter.error(f"Error scraping video {post.id} for {username}: {str(e)}")
             video_posts.append(post)
             if self.use_db:
                 self.db.insert_or_update_post(post)
@@ -356,6 +361,7 @@ class FacebookScraper:
                 logging.error(str(e))
                 product.status = "error"
                 product.log = str(e)
+                self.reporter.error(f"Error scraping product {product.id} for {username}: {str(e)}")
             if self.use_db:
                 self.db.insert_or_update_product(product)
             products.append(product)
