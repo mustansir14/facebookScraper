@@ -167,7 +167,10 @@ class FacebookScraper:
                     elif date_text_split[1] == "hrs":
                         post.date_posted = datetime.now() - timedelta(hours=int(date_text_split[0]))
                     else:
-                        post.date_posted = datetime.strptime(date_text + " " + str(datetime.now().year), "%d %B %Y")
+                        try:
+                            post.date_posted = datetime.strptime(date_text + " " + str(datetime.now().year), "%d %B %Y")
+                        except:
+                            post.date_posted = datetime.strptime(date_text + " " + str(datetime.now().year), "%B %d %Y")
                 elif len(date_text_split) == 1:
                     if date_text[-1] == "m":
                         minutes = int(date_text[:-1])
@@ -304,7 +307,10 @@ class FacebookScraper:
                     elif date_text_split[1] == "hrs":
                         post.date_posted = datetime.now() - timedelta(hours=int(date_text_split[0]))
                     else:
-                        post.date_posted = datetime.strptime(date_text + " " + str(datetime.now().year), "%d %B %Y")
+                        try:
+                            post.date_posted = datetime.strptime(date_text + " " + str(datetime.now().year), "%d %B %Y")
+                        except:
+                            post.date_posted = datetime.strptime(date_text + " " + str(datetime.now().year), "%B %d %Y")
                 elif len(date_text_split) == 1:
                     if date_text[-1] == "m":
                         minutes = int(date_text[:-1])
