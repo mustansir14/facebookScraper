@@ -53,7 +53,7 @@ class FacebookScraper:
         self.driver.get(url)
         profile = Profile()
         try:
-            subline = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "d2edcug0.hpfvmrgz.qv66sw1b.c1et5uql.lr9zc1uh.a5q79mjw.g1cxx5fr.b1v8xokw.m9osqain"))).text.split("·")
+            subline = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "gvxzyvdx.aeinzg81.t7p7dqev.gh25dzvf.exr7barw.b6ax4al1.gem102v4.ncib64c9.mrvwc6qr.sx8pxkcf.f597kf1v.cpcgwwas.m2nijcs8.szxhu1pg.hpj0pwwo.sggt6rq5.tes86rjd.rtxb060y.ztn2w49o"))).text.split("·")
         except Exception as e:
             profile.status = "error"
             profile.log = "Error for " + url + ": " + str(e)
@@ -64,19 +64,19 @@ class FacebookScraper:
         if len(subline) > 1:
             profile.category = subline[1].strip()
         try:
-            see_more_button = self.driver.find_element_by_class_name('oajrlxb2.g5ia77u1.qu0x051f.esr5mh6w.e9989ue4.r7d6kgcz.rq0escxv.nhd2j8a9.nc684nl6.p7hjln8o.kvgmc6g5.cxmmr5t8.oygrvhab.hcukyx3x.jb3vyjys.rz4wbd8a.qt6c0cv9.a8nywdso.i1ao9s8h.esuyzwwr.f1sip0of.lzcic4wl.gpro0wi8.oo9gr5id.lrazzd5p')
+            see_more_button = self.driver.find_element_by_class_name('qi72231t.nu7423ey.n3hqoq4p.r86q59rh.b3qcqh3k.fq87ekyn.bdao358l.fsf7x5fv.rse6dlih.s5oniofx.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.cr00lzj9.rn8ck1ys.s3jn8y49.icdlwmnq.cxfqmxzd.pbevjfx6.innypi6y')
             if see_more_button.text.strip().lower() == "see more":
                 see_more_button.click()
         except:
             pass
         try:
-            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "rq0escxv.l9j0dhe7.du4w35lb.j83agx80.cbu4d94t.d2edcug0.hpfvmrgz.rj1gh0hx.buofh1pr.g5gj957u.o8rfisnq.p8fzw8mz.pcp91wgn.iuny7tx3.ipjc6fyt")))
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "qgrdou9d.nu7423ey.frfouenu.bonavkto.djs4p424.r7bn319e.bdao358l.aglvbi8b.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.om3e55n1.cr00lzj9.mfclru0v")))
         except Exception as e:
             profile.status = "error"
             profile.log = "Error for " + url + ": Error loading about block"
             logging.error(profile.log)
             self.reporter.error(profile.log)
-        lines = self.driver.find_elements_by_class_name("rq0escxv.l9j0dhe7.du4w35lb.j83agx80.cbu4d94t.d2edcug0.hpfvmrgz.rj1gh0hx.buofh1pr.g5gj957u.o8rfisnq.p8fzw8mz.pcp91wgn.iuny7tx3.ipjc6fyt")
+        lines = self.driver.find_elements_by_class_name("qgrdou9d.nu7423ey.frfouenu.bonavkto.djs4p424.r7bn319e.bdao358l.aglvbi8b.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.om3e55n1.cr00lzj9.mfclru0v")
         for line in lines:
             line_text = line.text.strip()
             if profile.about is None:
@@ -113,7 +113,12 @@ class FacebookScraper:
 
         photos_url = url.rstrip("/") + "/photos/?ref=page_internal"
         self.driver.get(photos_url)
-        images = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "aodizinl.hv4rvrfc.ihqw7lf3.dati1w0a"))).find_elements_by_tag_name("a")
+        try:
+            images = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "h6ft4zvz.r227ecj6.ez8dtbzv.gt60zsk1"))).find_elements_by_tag_name("a")
+        except Exception as e:
+            logging.error("Error scraping images: " + str(e))
+            self.reporter.error(str(e))
+            return []
         image_posts = []
         for image in images:
             post = Post()
@@ -121,7 +126,7 @@ class FacebookScraper:
             if scrape_specific_photo and post.id != scrape_specific_photo:
                 continue
             self.driver.execute_script("arguments[0].click();", image)
-            img = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "ji94ytn4.d2edcug0.r9f5tntg.r0294ipz")))
+            img = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "d65gybhy.gvxzyvdx.b84q63wn.lxj2zdis")))
             if not username:
                 post.username = self.driver.current_url.split("/photos")[0].split("/")[-1]
             else:
@@ -134,12 +139,12 @@ class FacebookScraper:
                 res = requests.get(image_source)
                 with open(post.media_path, "wb") as f:
                     f.write(res.content)
-                post.caption = self.driver.find_element_by_class_name("a8nywdso.j7796vcc.rz4wbd8a.l29c1vbm").text
+                post.caption = self.driver.find_element_by_class_name("nch0832m.sglrnj1k.oxkhqvkx.jpugfq45").text
                 post.caption = " ".join(filter(lambda x:x[0]!='#' or x[0] != '@', post.caption.split()))
                 post.no_of_likes = 0
                 likes_string = None
                 try:
-                    likes_string = self.driver.find_element_by_class_name("bzsjyuwj.ni8dbmo4.stjgntxs.ltmttdrg.gjzvkazv").text.replace(",", "")
+                    likes_string = self.driver.find_element_by_class_name("o3hwc0lp.lq84ybu9.hf30pyar.oshhggmv.lwqmdtw6").text.replace(",", "")
                     post.no_of_likes = int(likes_string)
                 except:
                     if likes_string:
@@ -155,7 +160,7 @@ class FacebookScraper:
                             post.no_of_likes = int(number)*1000000
                             if "." in likes_string:
                                 post.no_of_likes += int(likes_string[point_index+1:-1])*100000
-                date_text = self.driver.find_element_by_class_name("oajrlxb2.g5ia77u1.qu0x051f.esr5mh6w.e9989ue4.r7d6kgcz.rq0escxv.nhd2j8a9.nc684nl6.p7hjln8o.kvgmc6g5.cxmmr5t8.oygrvhab.hcukyx3x.jb3vyjys.rz4wbd8a.qt6c0cv9.a8nywdso.i1ao9s8h.esuyzwwr.f1sip0of.lzcic4wl.gmql0nx0.gpro0wi8.b1v8xokw").text
+                date_text = self.driver.find_element_by_class_name("qi72231t.nu7423ey.n3hqoq4p.r86q59rh.b3qcqh3k.fq87ekyn.bdao358l.fsf7x5fv.rse6dlih.s5oniofx.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.cr00lzj9.rn8ck1ys.s3jn8y49.icdlwmnq.jxuftiz4.cxfqmxzd.tes86rjd").text
                 date_text_split = date_text.split()
                 if len(date_text_split) == 4 and "at" in date_text and ":" in date_text:
                     post.date_posted = datetime.strptime(" ".join(date_text_split[:2]) + " " + str(datetime.now().year) + " " + date_text_split[3], "%d %B %Y %H:%M")
@@ -212,7 +217,12 @@ class FacebookScraper:
 
         videos_url = url.rstrip("/") + "/videos/?ref=page_internal"
         self.driver.get(videos_url)
-        videos = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "j83agx80.l9j0dhe7.k4urcfbm"))).find_elements_by_tag_name("a")
+        try:
+            videos = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "alzwoclg.om3e55n1.mfclru0v"))).find_elements_by_tag_name("a")
+        except Exception as e:
+            logging.error("Error scraping videos: " + str(e))
+            self.reporter.error(str(e))
+            return []
         video_urls = []
         for video in videos:
             url = video.get_attribute("href")
@@ -225,9 +235,9 @@ class FacebookScraper:
             if scrape_specific_video and post.id != scrape_specific_video:
                 continue
             self.driver.get(video_url)
-            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "hv4rvrfc.dati1w0a.discj3wi")))
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "r227ecj6.gt60zsk1.g4qalytl")))
             try:
-                buttons = self.driver.find_elements_by_class_name("oajrlxb2.g5ia77u1.qu0x051f.esr5mh6w.e9989ue4.r7d6kgcz.rq0escxv.nhd2j8a9.nc684nl6.p7hjln8o.kvgmc6g5.cxmmr5t8.oygrvhab.hcukyx3x.jb3vyjys.rz4wbd8a.qt6c0cv9.a8nywdso.i1ao9s8h.esuyzwwr.f1sip0of.lzcic4wl.gpro0wi8.oo9gr5id.lrazzd5p")
+                buttons = self.driver.find_elements_by_class_name("qi72231t.nu7423ey.n3hqoq4p.r86q59rh.b3qcqh3k.fq87ekyn.bdao358l.fsf7x5fv.rse6dlih.s5oniofx.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.cr00lzj9.rn8ck1ys.s3jn8y49.icdlwmnq.cxfqmxzd.pbevjfx6.innypi6y")
                 for button in buttons:
                     if button.text.strip().lower() == "see more":
                         self.driver.execute_script("arguments[0].click();", button)
@@ -250,7 +260,7 @@ class FacebookScraper:
                 if not os.path.isfile(post.media_path):
                     urllib.request.urlretrieve(video_source, post.media_path)
                 try:
-                    post.caption = self.driver.find_element_by_class_name("e5nlhep0.nu4hu5il.eg9m0zos").text
+                    post.caption = self.driver.find_element_by_class_name("o9wcebwi.bsavta2s.mm05nxu8").text
                     post.caption = " ".join(filter(lambda x:x[0]!='#' or x[0] != '@', post.caption.split()))
                 except:
                     pass
@@ -258,7 +268,7 @@ class FacebookScraper:
                 post.no_of_likes = 0
                 likes_string = None
                 try:
-                    likes_string = self.driver.find_element_by_class_name("gpro0wi8.g5ia77u1.bzsjyuwj.hcukyx3x.ni8dbmo4.stjgntxs.ltmttdrg.g0qnabr5").text.replace(",", "")
+                    likes_string = self.driver.find_element_by_class_name("cxfqmxzd.nu7423ey.o3hwc0lp.kmwttqpk.lq84ybu9.hf30pyar.oshhggmv.qm54mken").text.replace(",", "")
                     post.no_of_likes = int(likes_string)
                 except:
                     if likes_string:
@@ -277,7 +287,7 @@ class FacebookScraper:
                 
                 post.no_of_views = 0
                 view_string = None
-                for element in self.driver.find_elements_by_class_name("d2edcug0.hpfvmrgz.qv66sw1b.c1et5uql.lr9zc1uh.a8c37x1j.fe6kdd0r.mau55g9w.c8b282yb.keod5gw0.nxhoafnm.aigsh9s9.d9wwppkn.mdeji52x.e9vueds3.j5wam9gi.b1v8xokw.m9osqain"):
+                for element in self.driver.find_elements_by_class_name("gvxzyvdx.aeinzg81.t7p7dqev.gh25dzvf.exr7barw.b6ax4al1.gem102v4.ncib64c9.mrvwc6qr.sx8pxkcf.f597kf1v.cpcgwwas.f5mw3jnl.szxhu1pg.nfkogyam.kkmhubc1.tes86rjd.rtxb060y"):
                     view_string = element.text
                     if "view" in view_string:
                         view_string = view_string.replace(",", "").split()[0]
@@ -299,7 +309,7 @@ class FacebookScraper:
                                         post.no_of_views += int(view_string[point_index+1:-1])*100000
                         break
 
-                date_text = self.driver.find_element_by_class_name("oajrlxb2.g5ia77u1.qu0x051f.esr5mh6w.e9989ue4.r7d6kgcz.rq0escxv.nhd2j8a9.nc684nl6.p7hjln8o.kvgmc6g5.cxmmr5t8.oygrvhab.hcukyx3x.jb3vyjys.rz4wbd8a.qt6c0cv9.a8nywdso.i1ao9s8h.esuyzwwr.f1sip0of.lzcic4wl.gmql0nx0.gpro0wi8.b1v8xokw").text
+                date_text = self.driver.find_element_by_class_name("qi72231t.nu7423ey.n3hqoq4p.r86q59rh.b3qcqh3k.fq87ekyn.bdao358l.fsf7x5fv.rse6dlih.s5oniofx.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.cr00lzj9.rn8ck1ys.s3jn8y49.icdlwmnq.jxuftiz4.cxfqmxzd.tes86rjd").text
                 date_text_split = date_text.split()
                 if len(date_text_split) == 4 and "at" in date_text and ":" in date_text:
                     post.date_posted = datetime.strptime(" ".join(date_text_split[:2]) + " " + str(datetime.now().year) + " " + date_text_split[3], "%d %B %Y %H:%M")
@@ -355,10 +365,10 @@ class FacebookScraper:
         if not username:
             username = url.rstrip("/").split("/")[-1]
         try:
-            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "oajrlxb2.g5ia77u1.qu0x051f.esr5mh6w.e9989ue4.r7d6kgcz.rq0escxv.nhd2j8a9.nc684nl6.p7hjln8o.kvgmc6g5.cxmmr5t8.oygrvhab.hcukyx3x.jb3vyjys.rz4wbd8a.qt6c0cv9.a8nywdso.i1ao9s8h.esuyzwwr.f1sip0of.lzcic4wl.gmql0nx0.p8dawk7l")))
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "qi72231t.nu7423ey.n3hqoq4p.r86q59rh.b3qcqh3k.fq87ekyn.bdao358l.fsf7x5fv.rse6dlih.s5oniofx.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.cr00lzj9.rn8ck1ys.s3jn8y49.icdlwmnq.jxuftiz4.l3ldwz01")))
         except:
             return []
-        products_tags = self.driver.find_elements_by_class_name("oajrlxb2.g5ia77u1.qu0x051f.esr5mh6w.e9989ue4.r7d6kgcz.rq0escxv.nhd2j8a9.nc684nl6.p7hjln8o.kvgmc6g5.cxmmr5t8.oygrvhab.hcukyx3x.jb3vyjys.rz4wbd8a.qt6c0cv9.a8nywdso.i1ao9s8h.esuyzwwr.f1sip0of.lzcic4wl.gmql0nx0.p8dawk7l")
+        products_tags = self.driver.find_elements_by_class_name("qi72231t.nu7423ey.n3hqoq4p.r86q59rh.b3qcqh3k.fq87ekyn.bdao358l.fsf7x5fv.rse6dlih.s5oniofx.m8h3af8h.l7ghb35v.kjdc1dyq.kmwttqpk.srn514ro.oxkhqvkx.rl78xhln.nch0832m.cr00lzj9.rn8ck1ys.s3jn8y49.icdlwmnq.jxuftiz4.l3ldwz01")
         products = []
         for product_tag in products_tags:
             product = Product()
@@ -372,8 +382,8 @@ class FacebookScraper:
             logging.info("Scraping Product %s for %s" % (product.id, username))
             product.username = username
             try:
-                product.description = product_tag.find_element_by_class_name("a8c37x1j.ni8dbmo4.stjgntxs.l9j0dhe7").text.strip()
-                price_text = product_tag.find_element_by_class_name("d2edcug0.hpfvmrgz.qv66sw1b.c1et5uql.lr9zc1uh.a8c37x1j.fe6kdd0r.mau55g9w.c8b282yb.keod5gw0.nxhoafnm.aigsh9s9.d3f4x2em.iv3no6db.jq4qci2q.a3bd9o3v.b1v8xokw.m9osqain").text
+                product.description = product_tag.find_element_by_class_name("b6ax4al1.lq84ybu9.hf30pyar.om3e55n1").text.strip()
+                price_text = product_tag.find_element_by_class_name("mfclru0v.d2hqwtrz.i0rxk2l3.t5n4vrf6.sr926ui1.alzwoclg").text
                 for i, c in enumerate(price_text):
                     if c.isnumeric():
                         break
